@@ -3,6 +3,7 @@ package runtime
 import (
 	"encoding/base64"
 	"fmt"
+	"google.golang.org/protobuf/types/known/structpb"
 	"strconv"
 	"strings"
 
@@ -317,4 +318,15 @@ func UInt64Value(val string) (*wrapperspb.UInt64Value, error) {
 func BytesValue(val string) (*wrapperspb.BytesValue, error) {
 	parsedVal, err := Bytes(val)
 	return &wrapperspb.BytesValue{Value: parsedVal}, err
+}
+
+// Struct converts the given json string into a structpb.Struct.
+func Struct(val string) (*structpb.Struct, error) {
+	var r structpb.Struct
+	unmarshaler := &protojson.UnmarshalOptions{}
+	err := unmarshaler.Unmarshal([]byte(val), &r)
+	if err != nil {
+		return nil, err
+	}
+	return &r, nil
 }

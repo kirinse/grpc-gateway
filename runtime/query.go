@@ -2,8 +2,10 @@ package runtime
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"google.golang.org/protobuf/types/known/structpb"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -320,6 +322,19 @@ func parseMessage(msgDescriptor protoreflect.MessageDescriptor, value string) (p
 	case "google.protobuf.FieldMask":
 		fm := &field_mask.FieldMask{}
 		fm.Paths = append(fm.Paths, strings.Split(value, ",")...)
+		msg = fm
+	case "google.protobuf.Struct":
+		if value == "null" {
+			break
+		}
+		var v map[string]interface{}
+		if err := json.Unmarshal([]byte(value), &v); err != nil {
+			return protoreflect.Value{}, err
+		}
+		fm, err := structpb.NewStruct(v)
+		if err != nil {
+			return protoreflect.Value{}, err
+		}
 		msg = fm
 	default:
 		return protoreflect.Value{}, fmt.Errorf("unsupported message type: %q", string(msgDescriptor.FullName()))
